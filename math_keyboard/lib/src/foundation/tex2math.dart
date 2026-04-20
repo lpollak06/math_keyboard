@@ -41,8 +41,8 @@ class TeXParser {
         .flatten()
         .map(num.parse);
 
-    final pi = (string('{') & string(r'\pi') & string('}')).map((a) => math.pi);
-    final e = (string('{') & string('e') & string('}')).map((a) => math.e);
+    final pi = (string('{') & string(r'\pi') & string('}')).map((a) => 'pi');
+    final e = (string('{') & string('e') & string('}')).map((a) => 'e');
     final variable =
         (string('{') & letter().plus().flatten() & string('}')).pick(1);
 
