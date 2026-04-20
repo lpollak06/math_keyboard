@@ -123,7 +123,7 @@ class TeXParser {
     if (_stream[0][0] == '-' && _stream[1][1].contains(RegExp('[bfl]'))) {
       _stream.insert(0, [0, 'b']);
     }
-    if (_stream[0][0] == '!') {
+    if (_stream[0][0] == '!' || _stream[0][0] == r'\%') {
       throw 'Unable to parse';
     }
 
@@ -206,7 +206,7 @@ class TeXParser {
         }
         continue;
       }
-      if (i < _stream.length - 1 && _stream[i][0] == '!') {
+      if (i < _stream.length - 1 && (_stream[i][0] == '!' || _stream[i][0] == r'\%')) {
         switch (_stream[i + 1][1]) {
           case 'l':
           case 'f':
@@ -390,6 +390,10 @@ class TeXParser {
             addFactorial(result);
             // ignore: empty_catches
           } catch (e) {}
+          break;
+        case r'\%':
+          right = result.removeLast();
+          result.add(right / Number(100));
           break;
         // workaround for WASM casting bug, needs at least one non-string case
         // remove when https://github.com/dart-lang/sdk/issues/59782 is fixed
