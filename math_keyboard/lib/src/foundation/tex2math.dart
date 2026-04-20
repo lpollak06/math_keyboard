@@ -206,8 +206,10 @@ class TeXParser {
         }
         continue;
       }
-      if (i < _stream.length - 1 && (_stream[i][0] == '!' || _stream[i][0] == r'\%')) {
+      if (i < _stream.length - 1 &&
+          (_stream[i][0] == '!' || _stream[i][0] == r'\%')) {
         switch (_stream[i + 1][1]) {
+          case 'b':
           case 'l':
           case 'f':
             _stream.insert(i + 1, [
