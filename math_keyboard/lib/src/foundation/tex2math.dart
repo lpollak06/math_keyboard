@@ -377,7 +377,8 @@ class TeXParser {
           result.add(Log(left, right));
           break;
         case r'\sqrt':
-          result.add(Root.sqrt(result.removeLast()));
+          final arg = result.removeLast();
+          result.add(arg ^ (Number(1.0) / Number(2.0)));
           break;
         case r'\nrt':
           left = result.removeLast();
