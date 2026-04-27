@@ -7,6 +7,7 @@
 import 'dart:math' as math;
 
 import 'package:math_expressions/math_expressions.dart';
+import 'package:math_keyboard/src/foundation/text_number.dart';
 import 'package:petitparser/petitparser.dart';
 
 /// Parser for converting TeX input strings to math expressions.
@@ -39,7 +40,7 @@ class TeXParser {
             (char('.') & integer).pick(1).optional() &
             (char('E') & pattern('+-').optional() & integer).optional())
         .flatten()
-        .map(num.parse);
+        .map((value) => TextNumber(value));
 
     final pi = (string('{') & string(r'\pi') & string('}')).map((a) => 'pi');
     final e = (string('{') & string('e') & string('}')).map((a) => 'e');
@@ -271,7 +272,7 @@ class TeXParser {
           }
           break;
         case 'u':
-          if (_stream[i][0] is num) {
+          if (_stream[i][0] is TextNumber || _stream[i][0] is num) {
             _outputStack.add(_stream[i][0]);
           }
           break;
@@ -402,7 +403,9 @@ class TeXParser {
         // remove when https://github.com/dart-lang/sdk/issues/59782 is fixed
         case 0:
         default:
-          if (element is String) {
+          if (element is TextNumber) {
+            result.add(element);
+          } else if (element is String) {
             result.add(Variable(element));
           } else {
             result.add(Number(element));
@@ -419,7 +422,27 @@ class TeXParser {
 
   /// Checks whether factorial can be calculated.
   void addFactorial(List<Expression> result) {
-    final t = result.removeLast().evaluate(EvaluationType.REAL, ContextModel());
+    final expr = result.removeLast();
+    if (expr is TextNumber) {
+      final raw = expr.text;
+      if (raw.contains('.') || raw.contains('E') || raw.contains('e')) {
+        throw 'Unable to do factorial';
+      }
+      final value = BigInt.tryParse(raw);
+      if (value == null || value < BigInt.zero || value >= BigInt.from(20)) {
+        throw 'Unable to do factorial';
+      }
+      var a = value.toInt();
+      var y = 1;
+      while (a > 0) {
+        y = y * a ~/ 1;
+        a--;
+      }
+      result.add(Number(y));
+      return;
+    }
+
+    final t = expr.evaluate(EvaluationType.REAL, ContextModel());
     if (t.ceil() == t.floor() && t >= 0 && t < 20) {
       var a = t.toInt();
       var y = 1;
