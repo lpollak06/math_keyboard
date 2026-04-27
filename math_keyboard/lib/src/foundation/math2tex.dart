@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:math_expressions/math_expressions.dart';
 import 'package:math_keyboard/src/foundation/node.dart';
+import 'package:math_keyboard/src/foundation/text_number.dart';
 
 /// Converts the input [mathExpression] to a [TeXNode].
 TeXNode convertMathExpressionToTeXNode(Expression mathExpression) {
@@ -81,6 +82,12 @@ List<TeX> _convertToTeX(Expression mathExpression, TeXNode parent) {
   }
   if (mathExpression is Literal) {
     if (mathExpression is Number) {
+      if (mathExpression is TextNumber) {
+        final literal = mathExpression.toString();
+        return [
+          for (final symbol in literal.split('')) TeXLeaf(symbol),
+        ];
+      }
       final number = mathExpression.value as double;
       if (number == math.pi) {
         return [TeXLeaf(r'{\pi}')];

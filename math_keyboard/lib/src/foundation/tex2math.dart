@@ -7,6 +7,7 @@
 import 'dart:math' as math;
 
 import 'package:math_expressions/math_expressions.dart';
+import 'package:math_keyboard/src/foundation/text_number.dart';
 import 'package:petitparser/petitparser.dart';
 
 /// Parser for converting TeX input strings to math expressions.
@@ -39,10 +40,10 @@ class TeXParser {
             (char('.') & integer).pick(1).optional() &
             (char('E') & pattern('+-').optional() & integer).optional())
         .flatten()
-        .map(num.parse);
+        .map((value) => TextNumber(value));
 
-    final pi = (string('{') & string(r'\pi') & string('}')).map((a) => math.pi);
-    final e = (string('{') & string('e') & string('}')).map((a) => math.e);
+    final pi = (string('{') & string(r'\pi') & string('}')).map((a) => 'pi');
+    final e = (string('{') & string('e') & string('}')).map((a) => 'e');
     final variable =
         (string('{') & letter().plus().flatten() & string('}')).pick(1);
 
@@ -123,7 +124,7 @@ class TeXParser {
     if (_stream[0][0] == '-' && _stream[1][1].contains(RegExp('[bfl]'))) {
       _stream.insert(0, [0, 'b']);
     }
-    if (_stream[0][0] == '!') {
+    if (_stream[0][0] == '!' || _stream[0][0] == r'\%') {
       throw 'Unable to parse';
     }
 
@@ -206,8 +207,10 @@ class TeXParser {
         }
         continue;
       }
-      if (i < _stream.length - 1 && _stream[i][0] == '!') {
+      if (i < _stream.length - 1 &&
+          (_stream[i][0] == '!' || _stream[i][0] == r'\%')) {
         switch (_stream[i + 1][1]) {
+          case 'b':
           case 'l':
           case 'f':
             _stream.insert(i + 1, [
@@ -269,7 +272,7 @@ class TeXParser {
           }
           break;
         case 'u':
-          if (_stream[i][0] is num) {
+          if (_stream[i][0] is TextNumber || _stream[i][0] is num) {
             _outputStack.add(_stream[i][0]);
           }
           break;
@@ -375,7 +378,8 @@ class TeXParser {
           result.add(Log(left, right));
           break;
         case r'\sqrt':
-          result.add(Root.sqrt(result.removeLast()));
+          final arg = result.removeLast();
+          result.add(arg ^ (Number(1.0) / Number(2.0)));
           break;
         case r'\nrt':
           left = result.removeLast();
@@ -391,11 +395,17 @@ class TeXParser {
             // ignore: empty_catches
           } catch (e) {}
           break;
+        case r'\%':
+          right = result.removeLast();
+          result.add(right / Number(100));
+          break;
         // workaround for WASM casting bug, needs at least one non-string case
         // remove when https://github.com/dart-lang/sdk/issues/59782 is fixed
         case 0:
         default:
-          if (element is String) {
+          if (element is TextNumber) {
+            result.add(element);
+          } else if (element is String) {
             result.add(Variable(element));
           } else {
             result.add(Number(element));
@@ -412,7 +422,27 @@ class TeXParser {
 
   /// Checks whether factorial can be calculated.
   void addFactorial(List<Expression> result) {
-    final t = result.removeLast().evaluate(EvaluationType.REAL, ContextModel());
+    final expr = result.removeLast();
+    if (expr is TextNumber) {
+      final raw = expr.text;
+      if (raw.contains('.') || raw.contains('E') || raw.contains('e')) {
+        throw 'Unable to do factorial';
+      }
+      final value = BigInt.tryParse(raw);
+      if (value == null || value < BigInt.zero || value >= BigInt.from(20)) {
+        throw 'Unable to do factorial';
+      }
+      var a = value.toInt();
+      var y = 1;
+      while (a > 0) {
+        y = y * a ~/ 1;
+        a--;
+      }
+      result.add(Number(y));
+      return;
+    }
+
+    final t = expr.evaluate(EvaluationType.REAL, ContextModel());
     if (t.ceil() == t.floor() && t >= 0 && t < 20) {
       var a = t.toInt();
       var y = 1;
