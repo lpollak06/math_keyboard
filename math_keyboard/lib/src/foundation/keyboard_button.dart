@@ -140,17 +140,6 @@ final functionKeyboard = [
         'Dead',
       ],
     ),
-    const BasicKeyboardButtonConfig(
-      label: r'\sin',
-      value: r'\sin(',
-      asTex: true,
-      keyboardCharacters: ['s'],
-    ),
-    const BasicKeyboardButtonConfig(
-      label: r'\sin^{-1}',
-      value: r'\sin^{-1}(',
-      asTex: true,
-    ),
   ],
   [
     const BasicKeyboardButtonConfig(
@@ -166,17 +155,6 @@ final functionKeyboard = [
       args: [TeXArg.brackets, TeXArg.braces],
       asTex: true,
     ),
-    const BasicKeyboardButtonConfig(
-      label: r'\cos',
-      value: r'\cos(',
-      asTex: true,
-      keyboardCharacters: ['c'],
-    ),
-    const BasicKeyboardButtonConfig(
-      label: r'\cos^{-1}',
-      value: r'\cos^{-1}(',
-      asTex: true,
-    ),
   ],
   [
     const BasicKeyboardButtonConfig(
@@ -184,23 +162,13 @@ final functionKeyboard = [
       value: r'\log_',
       asTex: true,
       args: [TeXArg.braces, TeXArg.parentheses],
+      keyboardCharacters: ['l'],
     ),
     const BasicKeyboardButtonConfig(
       label: r'\ln(\Box)',
       value: r'\ln(',
       asTex: true,
-      keyboardCharacters: ['l'],
-    ),
-    const BasicKeyboardButtonConfig(
-      label: r'\tan',
-      value: r'\tan(',
-      asTex: true,
-      keyboardCharacters: ['t'],
-    ),
-    const BasicKeyboardButtonConfig(
-      label: r'\tan^{-1}',
-      value: r'\tan^{-1}(',
-      asTex: true,
+      keyboardCharacters: ['n'],
     ),
   ],
   [

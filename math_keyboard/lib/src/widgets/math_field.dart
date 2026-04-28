@@ -22,7 +22,7 @@ class MathField extends StatefulWidget {
     this.focusNode,
     this.controller,
     this.keyboardType = MathKeyboardType.expression,
-    this.variables = const ['x'],
+    this.variables = const [],
     this.decoration = const InputDecoration(),
     this.onChanged,
     this.onSubmitted,
