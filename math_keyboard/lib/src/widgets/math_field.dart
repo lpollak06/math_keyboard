@@ -359,12 +359,8 @@ class _MathFieldState extends State<MathField> with TickerProviderStateMixin {
   }
 
   KeyEventResult _handleKey(FocusNode node, KeyEvent keyEvent) {
-    if (keyEvent is! KeyDownEvent) {
-      // We do not want to handle key up events in order to prevent double
-      // detection of logical key events (pressing backspace would be triggered
-      // twice - once for key down and once for key up). Characters already
-      // handle this by default (keyEvent.character is null for key up) but
-      // we can still cancel early :)
+    if (keyEvent is! KeyDownEvent && keyEvent is! KeyRepeatEvent) {
+      // Ignore key up while allowing key repeats for held navigation/delete.
       return KeyEventResult.ignored;
     }
 
@@ -452,7 +448,8 @@ class _MathFieldState extends State<MathField> with TickerProviderStateMixin {
   KeyEventResult? _handleLogicalKey(
       LogicalKeyboardKey logicalKey, List<KeyboardButtonConfig> configs) {
     // Check logical, fixed keyboard bindings (like backspace and arrow keys).
-    if (logicalKey == LogicalKeyboardKey.backspace &&
+    if ((logicalKey == LogicalKeyboardKey.backspace ||
+            logicalKey == LogicalKeyboardKey.delete) &&
         configs.any((element) => element is DeleteButtonConfig)) {
       _controller.goBack(deleteMode: true);
       return KeyEventResult.handled;
