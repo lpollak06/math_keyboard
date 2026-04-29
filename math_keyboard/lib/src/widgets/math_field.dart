@@ -448,10 +448,14 @@ class _MathFieldState extends State<MathField> with TickerProviderStateMixin {
   KeyEventResult? _handleLogicalKey(
       LogicalKeyboardKey logicalKey, List<KeyboardButtonConfig> configs) {
     // Check logical, fixed keyboard bindings (like backspace and arrow keys).
-    if ((logicalKey == LogicalKeyboardKey.backspace ||
-            logicalKey == LogicalKeyboardKey.delete) &&
+    if (logicalKey == LogicalKeyboardKey.backspace &&
         configs.any((element) => element is DeleteButtonConfig)) {
       _controller.goBack(deleteMode: true);
+      return KeyEventResult.handled;
+    }
+    if (logicalKey == LogicalKeyboardKey.delete &&
+        configs.any((element) => element is DeleteButtonConfig)) {
+      _controller.deleteForward();
       return KeyEventResult.handled;
     }
     if ((logicalKey == LogicalKeyboardKey.arrowRight ||
@@ -800,6 +804,49 @@ class MathFieldEditingController extends ChangeNotifier {
           currentNode.setCursor();
         }
         notifyListeners();
+    }
+  }
+
+  /// Deletes the next node (to the right of the cursor).
+  void deleteForward() {
+    if (!_moveCursorForward()) {
+      return;
+    }
+    goBack(deleteMode: true);
+  }
+
+  /// Moves the cursor one logical step to the right.
+  ///
+  /// Returns false if there is no next element.
+  bool _moveCursorForward() {
+    final state = currentNode.shiftCursorRight();
+    switch (state) {
+      case NavigationState.success:
+        return true;
+      case NavigationState.func:
+        final pos = currentNode.courserPosition - 1;
+        currentNode = (currentNode.children[pos] as TeXFunction).argNodes.first;
+        currentNode.courserPosition = 0;
+        currentNode.setCursor();
+        return true;
+      case NavigationState.end:
+        if (currentNode.parent == null) {
+          return false;
+        }
+        currentNode.removeCursor();
+        final parent = currentNode.parent!;
+        final nextArg = parent.argNodes.indexOf(currentNode) + 1;
+        if (nextArg >= parent.argNodes.length) {
+          currentNode = parent.parent;
+          currentNode.courserPosition =
+              currentNode.children.indexOf(parent) + 1;
+          currentNode.setCursor();
+        } else {
+          currentNode = currentNode.parent!.argNodes[nextArg];
+          currentNode.courserPosition = 0;
+          currentNode.setCursor();
+        }
+        return true;
     }
   }
 
